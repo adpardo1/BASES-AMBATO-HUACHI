@@ -80,7 +80,7 @@ df_captaciones_filtered = df_captaciones[df_captaciones['AÑO'].isin(anio_captac
 
 # === 3. Crear pestañas ===
 tab_creditos, tab_captaciones = st.tabs(["📈 Créditos", "💰 Captaciones"])
-oficinas = ['AMBATO', 'HUACHICHICO']
+oficinas = ['AMBATO', 'HUACHI CHICO']
 
 # Función para calcular moda (la tasa que más se repite)
 def calcular_moda(series):
@@ -147,6 +147,7 @@ with tab_captaciones:
         tasa_cap = df_ofi.groupby('AÑO')['TASA'].apply(calcular_moda).reset_index()
         fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='TASA', markers=True, title=f"Tasa Más Frecuente Captaciones - {oficina}")
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
+
 
 
 
