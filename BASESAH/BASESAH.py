@@ -48,12 +48,12 @@ def load_captaciones(urls):
 
 # URLs crudas de GitHub (coloca aquí tus propios links raw)
 creditos_files = [
-    "AMBATO_CREDITOS_ACTIVAS.xlsx",
-    "HUACHICHICO_CREDITOS_ACTIVAS.xlsx"
+    "BASESAH/AMBATO_CREDITOS_ACTIVAS.xlsx",
+    "BASESAH/HUACHICHICO_CREDITOS_ACTIVAS.xlsx"
 ]
 captaciones_files = [
-    "AMBATO.xlsx",
-    "HUACHICHICO.xlsx"
+    "BASESAH/AMBATO.xlsx",
+    "BASESAH/HUACHICHICO.xlsx"
 ]
 
 df_creditos = load_creditos(creditos_files)
