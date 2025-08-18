@@ -143,10 +143,18 @@ with tab_captaciones:
         fig_saldo = px.bar(saldo_anual, x='AÑO', y='SALDO', text='SALDO', title=f"Saldos Totales Captaciones por Año - {oficina}")
         st.plotly_chart(fig_saldo, use_container_width=True)
 
-        # Tasa moda por año
-        tasa_cap = df_ofi.groupby('AÑO')['TASA'].apply(calcular_moda).reset_index()
-        fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='TASA', markers=True, title=f"Tasa Más Frecuente Captaciones - {oficina}")
+        # Tasa máxima por año para captaciones
+        tasa_cap = df_ofi.groupby('AÑO')['TASA'].max().reset_index()
+        fig_tasa_cap = px.line(
+            tasa_cap, 
+            x='AÑO', 
+            y='TASA', 
+            markers=True, 
+            title=f"Tasa Máxima Captaciones - {oficina}"
+        )
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
+
+
 
 
 
