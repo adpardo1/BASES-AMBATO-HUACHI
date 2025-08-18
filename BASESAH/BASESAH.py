@@ -1,22 +1,23 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from collections import Counter
 
 # === Configuración de la app ===
 st.set_page_config(layout="wide", page_title="Dashboard Créditos y Captaciones")
 st.title("📊 Dashboard Créditos y Captaciones")
 st.markdown("---")
 
-# === 1. Función para cargar y preparar datos ===
+# === 1. Función para cargar y preparar datos desde GitHub ===
 @st.cache_data
-def load_creditos(files):
+def load_creditos(urls):
     df_list = []
-    for file in files:
+    for url in urls:
         try:
-            df = pd.read_excel(file, engine="openpyxl")
+            df = pd.read_excel(url, engine="openpyxl")
             df_list.append(df)
-        except FileNotFoundError:
-            st.error(f"Archivo no encontrado: {file}")
+        except Exception as e:
+            st.error(f"No se pudo cargar el archivo: {url}\n{e}")
     if not df_list:
         return None
     df_all = pd.concat(df_list, ignore_index=True)
@@ -28,14 +29,14 @@ def load_creditos(files):
     return df_all
 
 @st.cache_data
-def load_captaciones(files):
+def load_captaciones(urls):
     df_list = []
-    for file in files:
+    for url in urls:
         try:
-            df = pd.read_excel(file, engine="openpyxl")
+            df = pd.read_excel(url, engine="openpyxl")
             df_list.append(df)
-        except FileNotFoundError:
-            st.error(f"Archivo no encontrado: {file}")
+        except Exception as e:
+            st.error(f"No se pudo cargar el archivo: {url}\n{e}")
     if not df_list:
         return None
     df_all = pd.concat(df_list, ignore_index=True)
@@ -45,9 +46,15 @@ def load_captaciones(files):
     df_all['AÑO'] = df_all['FECHA_APERTURA'].dt.year
     return df_all
 
-# Archivos más livianos
-creditos_files = ["AMBATO_CREDITOS_ACTIVAS.xlsx", "HUACHICHICO_CREDITOS_ACTIVAS.xlsx"]
-captaciones_files = ["AMBATO.xlsx", "HUACHI CHICO.xlsx"]
+# URLs crudas de GitHub (coloca aquí tus propios links raw)
+creditos_files = [
+    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/AMBATO_CREDITOS_ACTIVAS.xlsx",
+    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/HUACHICHICO_CREDITOS_ACTIVAS.xlsx"
+]
+captaciones_files = [
+    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/AMBATO.xlsx",
+    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/HUACHICHICO.xlsx"
+]
 
 df_creditos = load_creditos(creditos_files)
 df_captaciones = load_captaciones(captaciones_files)
@@ -73,7 +80,15 @@ df_captaciones_filtered = df_captaciones[df_captaciones['AÑO'].isin(anio_captac
 
 # === 3. Crear pestañas ===
 tab_creditos, tab_captaciones = st.tabs(["📈 Créditos", "💰 Captaciones"])
-oficinas = ['AMBATO', 'HUACHI CHICO']
+oficinas = ['AMBATO', 'HUACHICHICO']
+
+# Función para calcular moda (la tasa que más se repite)
+def calcular_moda(series):
+    series = series.dropna()
+    if series.empty:
+        return None
+    counts = Counter(series)
+    return counts.most_common(1)[0][0]
 
 # --- Pestaña Créditos ---
 with tab_creditos:
@@ -103,10 +118,9 @@ with tab_creditos:
                            title=f"Monto Total Colocado por Año - {oficina}")
         st.plotly_chart(fig_monto, use_container_width=True)
 
-        # Tasa promedio y máxima
-        tasa_anual = df_ofi.groupby('AÑO')['TASAINTERES'].agg(['mean','max']).reset_index()
-        fig_tasa = px.line(tasa_anual, x='AÑO', y='mean', markers=True, title=f"Tasa Promedio Créditos - {oficina}")
-        fig_tasa.add_scatter(x=tasa_anual['AÑO'], y=tasa_anual['max'], mode='lines+markers', name='Tasa Máxima')
+        # Tasa moda por año
+        tasa_anual = df_ofi.groupby('AÑO')['TASAINTERES'].apply(calcular_moda).reset_index()
+        fig_tasa = px.line(tasa_anual, x='AÑO', y='TASAINTERES', markers=True, title=f"Tasa Más Frecuente Créditos - {oficina}")
         st.plotly_chart(fig_tasa, use_container_width=True)
 
         # Días de mora promedio y máximo
@@ -129,8 +143,7 @@ with tab_captaciones:
         fig_saldo = px.bar(saldo_anual, x='AÑO', y='SALDO', text='SALDO', title=f"Saldos Totales Captaciones por Año - {oficina}")
         st.plotly_chart(fig_saldo, use_container_width=True)
 
-        # Tasa promedio y máxima
-        tasa_cap = df_ofi.groupby('AÑO')['TASA'].agg(['mean','max']).reset_index()
-        fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='mean', markers=True, title=f"Tasa Promedio Captaciones - {oficina}")
-        fig_tasa_cap.add_scatter(x=tasa_cap['AÑO'], y=tasa_cap['max'], mode='lines+markers', name='Tasa Máxima')
+        # Tasa moda por año
+        tasa_cap = df_ofi.groupby('AÑO')['TASA'].apply(calcular_moda).reset_index()
+        fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='TASA', markers=True, title=f"Tasa Más Frecuente Captaciones - {oficina}")
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
