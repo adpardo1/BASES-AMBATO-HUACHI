@@ -53,7 +53,7 @@ creditos_files = [
 ]
 captaciones_files = [
     "BASESAH/AMBATO.xlsx",
-    "BASESAH/HUACHICHICO.xlsx"
+    "BASESAH/HUACHI CHICO.xlsx"
 ]
 
 df_creditos = load_creditos(creditos_files)
@@ -147,5 +147,6 @@ with tab_captaciones:
         tasa_cap = df_ofi.groupby('AÑO')['TASA'].apply(calcular_moda).reset_index()
         fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='TASA', markers=True, title=f"Tasa Más Frecuente Captaciones - {oficina}")
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
+
 
 
