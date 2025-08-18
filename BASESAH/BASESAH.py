@@ -48,12 +48,12 @@ def load_captaciones(urls):
 
 # URLs crudas de GitHub (coloca aquí tus propios links raw)
 creditos_files = [
-    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/AMBATO_CREDITOS_ACTIVAS.xlsx",
-    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/HUACHICHICO_CREDITOS_ACTIVAS.xlsx"
+    "AMBATO_CREDITOS_ACTIVAS.xlsx",
+    "BASESAH/HUACHICHICO_CREDITOS_ACTIVAS.xlsx"
 ]
 captaciones_files = [
-    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/AMBATO.xlsx",
-    "https://github.com/adpardo1/BASES-AMBATO-HUACHI/main/BASESAH/HUACHICHICO.xlsx"
+    "BASESAH/AMBATO.xlsx",
+    "BASES-AMBATO-HUACHI/main/BASESAH/HUACHICHICO.xlsx"
 ]
 
 df_creditos = load_creditos(creditos_files)
@@ -147,3 +147,4 @@ with tab_captaciones:
         tasa_cap = df_ofi.groupby('AÑO')['TASA'].apply(calcular_moda).reset_index()
         fig_tasa_cap = px.line(tasa_cap, x='AÑO', y='TASA', markers=True, title=f"Tasa Más Frecuente Captaciones - {oficina}")
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
+
