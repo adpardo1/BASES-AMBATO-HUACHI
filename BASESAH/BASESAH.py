@@ -93,7 +93,6 @@ def calcular_moda(series):
 # --- Pestaña Créditos ---
 with tab_creditos:
     st.header("Comparación Tasa Máxima Créditos vs Captaciones por Oficina y Año")
-
     # Crear lista para almacenar resultados
     max_tasas_anual = []
     
@@ -119,17 +118,28 @@ with tab_creditos:
     # Convertir a DataFrame
     df_max_tasas_anual = pd.DataFrame(max_tasas_anual)
     
-    # Graficar con Plotly
-    fig_comp_anual = px.bar(
+    # Graficar con líneas por oficina
+    fig_comp_anual = px.line(
         df_max_tasas_anual,
         x='AÑO',
-        y=['Créditos', 'Captaciones'],
+        y='Créditos',
         color='OFICINA',
-        barmode='group',
-        text_auto=True,
-        title="Tasa Máxima Créditos vs Captaciones por Oficina y Año"
+        markers=True,
+        title="Tasa Máxima Créditos por Oficina y Año"
     )
+    # Agregar línea de captaciones
+    for oficina in oficinas:
+        df_ofi = df_max_tasas_anual[df_max_tasas_anual['OFICINA'] == oficina]
+        fig_comp_anual.add_scatter(
+            x=df_ofi['AÑO'],
+            y=df_ofi['Captaciones'],
+            mode='lines+markers',
+            name=f'Captaciones {oficina}'
+        )
+    
     st.plotly_chart(fig_comp_anual, use_container_width=True)
+
+
 
     
     st.markdown("---")
@@ -181,6 +191,7 @@ with tab_captaciones:
             title=f"Tasa Máxima Captaciones - {oficina}"
         )
         st.plotly_chart(fig_tasa_cap, use_container_width=True)
+
 
 
 
