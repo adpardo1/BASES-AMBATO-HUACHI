@@ -38,22 +38,8 @@ def plot_projections(df_pivot, df_proyeccion, cuenta):
 def show_growth_model(df_filtered):
     PROJECTION_PERIOD_MONTHS = 60
     
-    # Normaliza nombres de cuentas que queremos proyectar
     cuentas_a_proyectar = ['CARTERA_DE_CREDITOS', 'DEPOSITOS_A_PLAZO']
-    
-    # Depuración: muestra los nombres reales que hay en los datos
-    st.write("Nombres únicos de NOMBRE_CTA_CONTABLE en el CSV:", df_filtered['NOMBRE_CTA_CONTABLE'].unique())
-    
-    df_pivot = df_filtered[df_filtered['NOMBRE_CTA_CONTABLE'].isin(cuentas_a_proyectar)] \
-        .groupby(['FECHA_DATOS', 'NOMBRE_CTA_CONTABLE'])['SALDO'].sum() \
-        .unstack(fill_value=0)
-
-    # Validación: asegúrate que las columnas existan
-    for col in cuentas_a_proyectar:
-        if col not in df_pivot.columns:
-            st.error(f"No se encontró la cuenta '{col}' en los datos. Revisa el CSV y la normalización de nombres.")
-            return
-    
+    df_pivot = df_filtered[df_filtered['NOMBRE_CTA_CONTABLE'].isin(cuentas_a_proyectar)].groupby(['FECHA_DATOS', 'NOMBRE_CTA_CONTABLE'])['SALDO'].sum().unstack(fill_value=0)
     df_pivot['UTILIDADES'] = df_pivot['CARTERA_DE_CREDITOS'] - df_pivot['DEPOSITOS_A_PLAZO']
     
     if len(df_pivot) < 12:
@@ -69,25 +55,33 @@ def show_growth_model(df_filtered):
     # --- Bucle para generar las proyecciones de forma incremental con valles sutiles ---
     for i in range(PROJECTION_PERIOD_MONTHS):
         
-        # Lógica de valles y picos
-        if i < 12:
+        # --- Lógica para valles y picos en la cartera ---
+        # Último dato histórico: Junio 2025. Proyección: Julio 2025 (i=0) en adelante.
+        if i < 12:  # Julio 2025 a Junio 2026
             tasa_ajuste_cartera_anual = 0.10
-        elif i < 24:
+        elif i >= 12 and i < 24:  # Julio 2026 a Junio 2027
+            # Primer valle (casi imperceptible)
             tasa_ajuste_cartera_anual = -0.005
-        elif i < 36:
+        elif i >= 24 and i < 36: # Julio 2027 a Junio 2028
+            # Primer pico (crecimiento muy sutil)
             tasa_ajuste_cartera_anual = 0.005
-        elif i < 48:
+        elif i >= 36 and i < 48: # Julio 2028 a Junio 2029
+            # Segundo valle (casi imperceptible)
             tasa_ajuste_cartera_anual = -0.01
-        else:
+        else:  # Julio 2029 en adelante
+            # Caída final
             tasa_ajuste_cartera_anual = -0.03
         
+        # Tasa de crecimiento para depósitos controlada
         tasa_ajuste_depositos_anual = 0.07
         
+        # Convertir tasas anuales a tasas mensuales
         tasa_mensual_cartera = (1 + tasa_ajuste_cartera_anual)**(1/12) - 1
         tasa_mensual_depositos = (1 + tasa_ajuste_depositos_anual)**(1/12) - 1
 
-        ultimo_valor_cartera *= (1 + tasa_mensual_cartera)
-        ultimo_valor_depositos *= (1 + tasa_mensual_depositos)
+        # Actualizar el valor proyectado, basándose en el valor del mes anterior
+        ultimo_valor_cartera = ultimo_valor_cartera * (1 + tasa_mensual_cartera)
+        ultimo_valor_depositos = ultimo_valor_depositos * (1 + tasa_mensual_depositos)
 
         cartera_proyeccion.append(ultimo_valor_cartera)
         depositos_proyeccion.append(ultimo_valor_depositos)
@@ -100,19 +94,12 @@ def show_growth_model(df_filtered):
         'UTILIDADES': utilidades_proyeccion
     }
 
-    df_proyeccion = pd.DataFrame(
-        proyecciones,
-        index=pd.date_range(
-            start=df_pivot.index[-1] + pd.DateOffset(months=1),
-            periods=PROJECTION_PERIOD_MONTHS,
-            freq='M'
-        )
-    )
+    df_proyeccion = pd.DataFrame(proyecciones, index=pd.date_range(start=df_pivot.index[-1] + pd.DateOffset(months=1), periods=PROJECTION_PERIOD_MONTHS, freq='M'))
     
     st.header("Modelo de Crecimiento (Utilidades: Cartera - Obligaciones)")
     for cuenta in proyecciones.keys():
         plot_projections(df_pivot, df_proyeccion, cuenta)
-
+        
 # --- Lógica principal de la aplicación ---
 df = load_and_preprocess_data()
 if df is not None:
