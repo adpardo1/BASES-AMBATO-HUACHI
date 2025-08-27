@@ -9,11 +9,12 @@ import statsmodels.api as sm
 def load_and_preprocess_data():
     """Carga y preprocesa el archivo de datos."""
     try:
-        df = pd.read_csv("BASESAH/proyeccion.csv")
+        df = pd.read_csv('proyeccion.csv')
     except FileNotFoundError:
         st.error("Error: El archivo 'proyeccion.csv' no se encuentra en el mismo directorio.")
         return None
     
+    # Preprocesa los nombres de las columnas y los datos de la columna 'NOMBRE_CTA_CONTABLE'
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.upper()
     df['FECHA_DATOS'] = pd.to_datetime(df['FECHA_DATOS'])
     df['NOMBRE_CTA_CONTABLE'] = df['NOMBRE_CTA_CONTABLE'].str.strip().str.replace(' ', '_').str.upper()
@@ -28,20 +29,38 @@ def load_and_preprocess_data():
 
 # --- Función para generar las gráficas ---
 def plot_projections(df_pivot, df_proyeccion, cuenta):
+    """Genera y muestra los gráficos de datos históricos y proyecciones."""
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_pivot.index, y=df_pivot[cuenta], mode='lines+markers', name='Datos Históricos'))
+    
+    # Comprobar si los datos históricos existen
+    if cuenta in df_pivot.columns:
+        fig.add_trace(go.Scatter(x=df_pivot.index, y=df_pivot[cuenta], mode='lines+markers', name='Datos Históricos'))
+    else:
+        st.warning(f"No se encontraron datos históricos para la cuenta '{cuenta}'.")
+        
+    # Siempre se mostrará la proyección si existe
     fig.add_trace(go.Scatter(x=df_proyeccion.index, y=df_proyeccion[cuenta], mode='lines', name='Proyección', line=dict(dash='dash')))
+    
     fig.update_layout(title=f'Proyección de {cuenta.replace("_", " ")}', xaxis_title='Fecha', yaxis_title='Saldo', template='plotly_white')
     st.plotly_chart(fig, use_container_width=True)
 
 # --- Contenido de la pestaña 2 ---
 def show_growth_model(df_filtered):
+    """Muestra el modelo de crecimiento y las proyecciones."""
     PROJECTION_PERIOD_MONTHS = 60
     
     cuentas_a_proyectar = ['CARTERA_DE_CREDITOS', 'DEPOSITOS_A_PLAZO']
     df_pivot = df_filtered[df_filtered['NOMBRE_CTA_CONTABLE'].isin(cuentas_a_proyectar)].groupby(['FECHA_DATOS', 'NOMBRE_CTA_CONTABLE'])['SALDO'].sum().unstack(fill_value=0)
-    df_pivot['UTILIDADES'] = df_pivot['CARTERA_DE_CREDITOS'] - df_pivot['DEPOSITOS_A_PLAZO']
-    
+
+    # --- VERIFICACIÓN DE COLUMNAS ANTES DE CALCULAR ---
+    # Este es el cambio clave para evitar el KeyError.
+    if 'CARTERA_DE_CREDITOS' in df_pivot.columns and 'DEPOSITOS_A_PLAZO' in df_pivot.columns:
+        df_pivot['UTILIDADES'] = df_pivot['CARTERA_DE_CREDITOS'] - df_pivot['DEPOSITOS_A_PLAZO']
+    else:
+        st.error("No se encontraron las cuentas 'CARTERA_DE_CREDITOS' y/o 'DEPOSITOS_A_PLAZO' en los datos filtrados.")
+        st.info("Por favor, revisa el archivo 'proyeccion.csv' para asegurar que los nombres de las cuentas coinciden con el código.")
+        return
+        
     if len(df_pivot) < 12:
         st.error("No hay suficientes datos (se necesitan al menos 12 meses).")
         return
