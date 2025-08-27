@@ -45,7 +45,7 @@ def show_growth_model(df_filtered):
     cuentas_a_proyectar = ['CARTERA_DE_CREDITOS', 'OBLIGACIONES_CON_EL_PUBLICO']
     df_pivot = df_filtered[df_filtered['NOMBRE_CTA_CONTABLE'].isin(cuentas_a_proyectar)].groupby(['FECHA_DATOS', 'NOMBRE_CTA_CONTABLE'])['SALDO'].sum().unstack(fill_value=0)
     # Se corrige el cálculo de utilidades
-    df_pivot['UTILIDADES'] = df_pivot['CARTERA_DE_CREDITOS'] - df_pivot['OBLIGACIONES_CON_EL_PUBLICO']
+    df_pivot['UTILIDADES'] = df_pivot['CARTERA_DE_CREDITOS'] - df_pivot['DEPOSITOS_A_PLAZO']
     
     if len(df_pivot) < 12:
         st.error("No hay suficientes datos (se necesitan al menos 12 meses).")
@@ -111,4 +111,5 @@ def show_growth_model(df_filtered):
 df = load_and_preprocess_data()
 if df is not None:
     show_growth_model(df)
+
 
