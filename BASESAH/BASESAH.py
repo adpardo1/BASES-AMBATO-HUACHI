@@ -9,7 +9,7 @@ import statsmodels.api as sm
 def load_and_preprocess_data():
     """Carga y preprocesa el archivo de datos."""
     try:
-        df = pd.read_csv('../proyeccion.csv')
+        df = pd.read_csv('BASESAH/proyeccion.csv')
     except FileNotFoundError:
         st.error("Error: El archivo 'proyeccion.csv' no se encuentra en el mismo directorio.")
         return None
@@ -104,4 +104,5 @@ def show_growth_model(df_filtered):
 df = load_and_preprocess_data()
 if df is not None:
     show_growth_model(df)
+
 
