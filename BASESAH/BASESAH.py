@@ -11,7 +11,7 @@ def load_and_preprocess_data():
     try:
         # Nota: La ruta de archivo original se ha ajustado para la ejecución local.
         # Si el archivo está en una subcarpeta, la ruta debe ser 'nombre_carpeta/nombre_archivo.csv'
-        df = pd.read_csv('proyeccion.csv')
+        df = pd.read_csv("BASESAH/proyeccion.csv")
     except FileNotFoundError:
         st.error("Error: El archivo 'proyeccion.csv' no se encuentra en el mismo directorio. Por favor, asegúrate de que esté en la ubicación correcta.")
         return None
@@ -110,3 +110,4 @@ def show_growth_model(df_filtered):
 df = load_and_preprocess_data()
 if df is not None:
     show_growth_model(df)
+
